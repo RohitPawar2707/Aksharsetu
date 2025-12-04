@@ -1,0 +1,62 @@
+name: akshersetu_final
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Camera + Gallery
+#  camera: ^0.10.5+5
+  vibration: ^2.0.0
+#  camera: ^0.10.5+9      # or your current version
+#  image_picker: ^1.0.7   # or your current version
+#  edge_detection: ^1.0.1
+#  crop_your_image: ^1.0.3
+
+  camera: ^0.10.5+9
+  image_picker: ^1.0.7
+
+  crop_your_image: ^1.0.3
+
+
+
+  #  image_cropper: ^5.0.1
+
+  #  google_mlkit_document_scanner: ^0.13.0  # check latest on pub.dev
+
+
+
+
+
+
+
+  # Crop package (latest)
+#  crop_your_image: ^2.0.0
+
+
+  # File management
+  path_provider: ^2.0.14
+
+  # Animations
+  lottie: ^2.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/logo.png
+    - assets/background_image.png
