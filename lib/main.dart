@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+
 import 'screens/login_page.dart';
 import 'screens/register_page.dart';
 import 'screens/loading_page.dart';
 import 'screens/home_page.dart';
-import 'screens/camera_screen.dart';   // ✔ correct import
+import 'screens/camera_screen.dart';
 import 'screens/profile_page.dart';
+import 'screens/transliteration_output_page.dart';
+import 'screens/tts_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,7 +22,6 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'AksharSetu',
 
-      // First screen that opens
       initialRoute: '/login',
 
       routes: {
@@ -27,8 +29,29 @@ class MyApp extends StatelessWidget {
         '/register': (_) => const RegisterPage(),
         '/loading': (_) => const LoadingPage(),
         '/home': (_) => const HomePage(),
-        '/camera': (_) => CameraPage(),     // ✔ FIXED
+        '/camera': (_) => const CameraPage(),
         '/profile': (_) => const ProfilePage(),
+
+        '/output': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map;
+
+          return TransliterationOutputPage(
+            image: args["image"],
+            language: args["language"],
+            script: args["script"],
+            ttsCode: args["ttsCode"],
+          );
+        },
+
+        '/tts': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map;
+
+          return TtsPage(
+            imagePath: args["imagePath"],
+            language: args["language"],
+            ttsCode: args["ttsCode"], text: '', script: '',
+          );
+        },
       },
     );
   }

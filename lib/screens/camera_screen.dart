@@ -1,10 +1,43 @@
 // camera_page.dart
+
 import 'dart:io';
 import 'dart:ui';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+/// ================================
+/// LANGUAGE MODEL
+/// ================================
+class AppLanguage {
+  final String name;       // What user selects (Hindi, Tamil…)
+  final String script;     // Script for Transliteration API
+  final String ttsCode;    // TTS language code
+
+  const AppLanguage({
+    required this.name,
+    required this.script,
+    required this.ttsCode,
+  });
+}
+
+/// FULL LANGUAGE LIST
+const List<AppLanguage> appLanguages = [
+  AppLanguage(name: "Hindi", script: "Devanagari", ttsCode: "hi-IN"),
+  AppLanguage(name: "Marathi", script: "Devanagari", ttsCode: "mr-IN"),
+  AppLanguage(name: "Sanskrit", script: "Devanagari", ttsCode: "hi-IN"),
+  AppLanguage(name: "Nepali", script: "Devanagari", ttsCode: "hi-IN"),
+  AppLanguage(name: "Gujarati", script: "Gujarati", ttsCode: "gu-IN"),
+  AppLanguage(name: "Punjabi (Gurmukhi)", script: "Gurmukhi", ttsCode: "pa-IN"),
+  AppLanguage(name: "Bengali", script: "Bengali", ttsCode: "bn-IN"),
+  AppLanguage(name: "Assamese", script: "Bengali", ttsCode: "as-IN"),
+  AppLanguage(name: "Odia", script: "Odia", ttsCode: "or-IN"),
+  AppLanguage(name: "Tamil", script: "Tamil", ttsCode: "ta-IN"),
+  AppLanguage(name: "Telugu", script: "Telugu", ttsCode: "te-IN"),
+  AppLanguage(name: "Kannada", script: "Kannada", ttsCode: "kn-IN"),
+  AppLanguage(name: "Malayalam", script: "Malayalam", ttsCode: "ml-IN"),
+  AppLanguage(name: "English", script: "Latin", ttsCode: "en-IN"),
+];
 
 class CameraPage extends StatefulWidget {
   const CameraPage({super.key});
@@ -24,7 +57,7 @@ class _CameraPageState extends State<CameraPage>
   File? capturedImage;
   File? galleryImage;
 
-  String? selectedLanguage;
+  AppLanguage? selectedLanguage;
 
   late AnimationController glowController;
 
@@ -60,7 +93,7 @@ class _CameraPageState extends State<CameraPage>
 
     controller = CameraController(
       backCam,
-      ResolutionPreset.max,
+      ResolutionPreset.high,
       enableAudio: false,
     );
 
@@ -73,7 +106,8 @@ class _CameraPageState extends State<CameraPage>
 
     flashOn = !flashOn;
     await controller!.setFlashMode(
-        flashOn ? FlashMode.torch : FlashMode.off);
+      flashOn ? FlashMode.torch : FlashMode.off,
+    );
     setState(() {});
   }
 
@@ -90,7 +124,7 @@ class _CameraPageState extends State<CameraPage>
 
     controller = CameraController(
       cam,
-      ResolutionPreset.max,
+      ResolutionPreset.high,
       enableAudio: false,
     );
 
@@ -112,7 +146,8 @@ class _CameraPageState extends State<CameraPage>
 
   Future<void> _pickFromGallery() async {
     final picker = ImagePicker();
-    final img = await picker.pickImage(source: ImageSource.gallery);
+    final img =
+    await picker.pickImage(source: ImageSource.gallery);
 
     if (img != null) {
       setState(() {
@@ -123,6 +158,9 @@ class _CameraPageState extends State<CameraPage>
     }
   }
 
+  /// ================================
+  ///  CAMERA PREVIEW FIXED
+  /// ================================
   Widget _cameraBox() {
     final h = MediaQuery.of(context).size.height * 0.70;
     final w = MediaQuery.of(context).size.width - 26;
@@ -141,27 +179,12 @@ class _CameraPageState extends State<CameraPage>
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // LIVE CAMERA
               if (activeImage == null)
-                (controller != null &&
-                    controller!.value.isInitialized)
-                    ? FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: controller!.value.previewSize!.width,
-                    height: controller!.value.previewSize!.height,
-                    child: CameraPreview(controller!),
-                  ),
-                )
-                    : const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                )
+                _buildCorrectPreview()
               else
-              // GALLERY / CAPTURED IMAGE
                 Image.file(activeImage!, fit: BoxFit.cover),
 
-              if (activeImage == null)
-                _grid(),
+              if (activeImage == null) _grid(),
 
               if (activeImage == null)
                 Positioned(
@@ -186,6 +209,35 @@ class _CameraPageState extends State<CameraPage>
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCorrectPreview() {
+    if (controller == null || !controller!.value.isInitialized) {
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final previewSize = controller!.value.previewSize!;
+        final previewAspectRatio = previewSize.width / previewSize.height;
+        final cardAspectRatio = constraints.maxWidth / constraints.maxHeight;
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: OverflowBox(
+            maxWidth: cardAspectRatio > previewAspectRatio
+                ? constraints.maxWidth
+                : constraints.maxHeight * previewAspectRatio,
+            maxHeight: cardAspectRatio > previewAspectRatio
+                ? constraints.maxWidth / previewAspectRatio
+                : constraints.maxHeight,
+            child: CameraPreview(controller!),
+          ),
+        );
+      },
     );
   }
 
@@ -271,7 +323,8 @@ class _CameraPageState extends State<CameraPage>
                   if (activeImage == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                          content: Text("Capture or select an image first.")),
+                        content: Text("Capture or select an image first."),
+                      ),
                     );
                     return;
                   }
@@ -295,7 +348,9 @@ class _CameraPageState extends State<CameraPage>
                     "/output",
                     arguments: {
                       "image": activeImage!.path,
-                      "language": selectedLanguage,
+                      "language": selectedLanguage!.name,
+                      "script": selectedLanguage!.script,
+                      "ttsCode": selectedLanguage!.ttsCode,
                     },
                   );
                 },
@@ -309,9 +364,10 @@ class _CameraPageState extends State<CameraPage>
                 child: const Text(
                   "Transliterate",
                   style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -338,9 +394,9 @@ class _CameraPageState extends State<CameraPage>
 
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [Colors.cyan, Colors.blueAccent],
         ),
       ),
@@ -348,6 +404,9 @@ class _CameraPageState extends State<CameraPage>
     );
   }
 
+  /// ================================
+  /// LANGUAGE PICKER
+  /// ================================
   void _openLanguagePicker() {
     showModalBottomSheet(
       context: context,
@@ -358,14 +417,17 @@ class _CameraPageState extends State<CameraPage>
       builder: (_) {
         return ListView(
           children: [
-            for (final lang in ["Hindi", "Marathi", "Tamil", "Telugu"])
+            for (final lang in appLanguages)
               ListTile(
-                title: Text(lang, style: const TextStyle(color: Colors.white)),
+                title: Text(
+                  lang.name,
+                  style: const TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   setState(() => selectedLanguage = lang);
                   Navigator.pop(context);
                 },
-              )
+              ),
           ],
         );
       },
